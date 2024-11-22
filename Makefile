@@ -5,7 +5,6 @@ GOBUILDFLAGS?=-v
 OSARCHS?=$(HOST_GOOS)/$(HOST_GOARCH)
 BINARY_NAME=fake-dns
 
-
 build:
 	@for arch in $(OSARCHS); do \
 		export EXE_SUFFIX=""; \
@@ -21,10 +20,6 @@ build:
 
 build_all: clean
 	$(MAKE) build OSARCHS=$(TARGET_OSARCHS)
-
-run:
-	go build -o ./bin/dev ./
-	bin/dev root_zones.json ./cache
 
 clean:
 	@rm -rf $(PWD)/bin
