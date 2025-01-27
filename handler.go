@@ -31,10 +31,15 @@ func (h *Handler) ServeDNS(w dns.ResponseWriter, r *dns.Msg) {
 	case dns.TypeNS:
 		msg.Authoritative = true
 		domain := msg.Question[0].Name
-		for nsName, _ := range h.c.Nameservers {
+		for nsName, nsIp := range h.c.Nameservers {
 			msg.Answer = append(msg.Answer, &dns.NS{
 				Hdr: dns.RR_Header{Name: domain, Rrtype: dns.TypeNS, Class: dns.ClassINET, Ttl: 3600},
 				Ns:  nsName,
+			})
+
+			msg.Extra = append(msg.Extra, &dns.A{
+				Hdr: dns.RR_Header{Name: nsName, Rrtype: dns.TypeA, Class: dns.ClassINET, Ttl: 3600},
+				A:   net.ParseIP(nsIp),
 			})
 		}
 	case dns.TypeSOA:
@@ -65,4 +70,7 @@ func (h *Handler) ServeDNS(w dns.ResponseWriter, r *dns.Msg) {
 		})
 	}
 	w.WriteMsg(&msg)
+	fmt.Println(time.Now().Format(time.DateTime) + " ")
+	//out, _ := json.MarshalIndent(msg, "", "    ")
+	//fmt.Println(string(out))
 }

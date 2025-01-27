@@ -16,7 +16,9 @@ func main() {
 		log.Fatal(err.Error())
 	}
 
-	srv := &dns.Server{Addr: ":" + strconv.FormatUint(config.Port, 10), Net: "udp"}
+	listenAddress := config.Ip + ":" + strconv.FormatUint(config.Port, 10)
+
+	srv := &dns.Server{Addr: listenAddress, Net: "udp"}
 	srv.Handler = &Handler{
 		c: *config,
 	}

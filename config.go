@@ -8,6 +8,7 @@ import (
 )
 
 type Config struct {
+	Ip          string            `json:"ip,omitempty"`
 	Port        uint64            `json:"port"`
 	Nameservers map[string]string `json:"nameservers"`
 }
