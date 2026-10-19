@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"github.com/miekg/dns"
+	"maps"
 	"net"
+	"slices"
 	"strconv"
 	"time"
 )
@@ -52,13 +54,12 @@ func (h *Handler) ServeDNS(w dns.ResponseWriter, r *dns.Msg) {
 		serial, _ := strconv.ParseUint(time.Now().UTC().Format("20060102"), 10, 64)
 		msg.Authoritative = true
 		domain := msg.Question[0].Name
+		// map iteration order is random, so use the alphabetically first nameserver
 		nameserver := ""
-		nameIp := ""
-		for nsName, nsIp := range h.c.Nameservers {
-			nameserver = nsName
-			nameIp = nsIp
-			break
+		if names := slices.Sorted(maps.Keys(h.c.Nameservers)); len(names) > 0 {
+			nameserver = names[0]
 		}
+		nameIp := h.c.Nameservers[nameserver]
 		msg.Answer = append(msg.Answer, &dns.SOA{
 			Hdr:     dns.RR_Header{Name: domain, Rrtype: dns.TypeSOA, Class: dns.ClassINET, Ttl: 3600},
 			Ns:      nameserver,
