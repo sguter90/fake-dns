@@ -13,6 +13,12 @@ type Handler struct {
 }
 
 func (h *Handler) ServeDNS(w dns.ResponseWriter, r *dns.Msg) {
+	if !h.c.IsAllowed(w.RemoteAddr()) {
+		// Drop the request silently; for TCP this also closes the connection.
+		fmt.Println(time.Now().Format(time.DateTime) + " dropped request from " + w.RemoteAddr().String())
+		w.Close()
+		return
+	}
 	fmt.Println(time.Now().Format(time.DateTime) + " " + r.Question[0].Name + " (" + dns.TypeToString[r.Question[0].Qtype] + ")")
 	msg := dns.Msg{}
 	msg.SetReply(r)

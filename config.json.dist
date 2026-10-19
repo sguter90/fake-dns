@@ -4,5 +4,11 @@
   "nameservers": {
     "fake-ns-1.example.com.": "1.2.3.4",
     "fake-ns-2.example.com.": "1.2.3.5"
-  }
+  },
+  "allowed_networks": [
+    "127.0.0.1",
+    "::1",
+    "10.0.0.0/8",
+    "192.168.0.0/16"
+  ]
 }

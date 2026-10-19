@@ -25,3 +25,18 @@ make build_all # build for Linux, Mac OS and Windows
 ```
 Default location is: ``./config.json``  
 An example configuration file can be found in ``config.json.dist``.
+
+## Access restriction
+Access can be limited to specific networks or single IPs via ``allowed_networks`` in the config file.
+Entries can be given in CIDR notation (e.g. ``10.0.0.0/8``, ``fd00::/8``) or as single IPv4/IPv6 addresses.
+Requests from other sources are dropped silently (no response is sent).
+If ``allowed_networks`` is omitted or empty, requests from everywhere are allowed.
+
+## Run as systemd service
+An example unit file can be found in ``fakedns.service``. It expects the binary at ``/opt/fakedns/fake-dns_linux_amd64`` and the config at ``/opt/fakedns/config.json``.
+```bash
+cp fakedns.service /etc/systemd/system/
+systemctl daemon-reload
+systemctl enable --now fakedns
+journalctl -u fakedns -f # show logs
+```
