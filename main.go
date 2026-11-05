@@ -24,13 +24,13 @@ func main() {
 
 	errCh := make(chan error, 2)
 
-	for _, net := range []string{"udp", "tcp"} {
-		srv := &dns.Server{Addr: listenAddress, Net: net, Handler: handler}
+	for _, n := range []string{"udp", "tcp"} {
+		srv := &dns.Server{Addr: listenAddress, Net: n, Handler: handler}
 		go func(net string) {
 			if err := srv.ListenAndServe(); err != nil {
 				errCh <- fmt.Errorf("failed to set %s listener: %w", net, err)
 			}
-		}(net)
+		}(n)
 	}
 
 	log.Fatal(<-errCh)
