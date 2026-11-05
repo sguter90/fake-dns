@@ -1,6 +1,6 @@
 # Fake DNS
 A stupid simple DNS server which answers as authoritative nameserver for each zone requested.  
-> Attention: Should only be used for testing and mocking. Don't allow access from public to this server!
+> Attention: Should only be used for testing and mocking. Don't allow access from unknown public IPs to this server!
 
 ## How it works
 This server will respond to A, AAAA, NS and SOA record requests with a static response regardless of the zone name.  
