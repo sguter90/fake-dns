@@ -11,15 +11,33 @@ import (
 )
 
 type Config struct {
-	Ip          string            `json:"ip,omitempty"`
-	Port        uint64            `json:"port"`
-	Nameservers map[string]string `json:"nameservers"`
+	Ip   string `json:"ip,omitempty"`
+	Port uint64 `json:"port"`
+
+	// Nameservers maps each nameserver name to its IPv4 and/or IPv6 addresses.
+	Nameservers map[string]NameserverIPs `json:"nameservers"`
 
 	// AllowedNetworks restricts access to the given networks (CIDR notation) or single IPs.
 	// If empty or omitted, requests from all sources are allowed.
 	AllowedNetworks []string `json:"allowed_networks,omitempty"`
 
 	allowedPrefixes []netip.Prefix
+}
+
+// NameserverIPs can be given in the config as a single IP ("1.2.3.4")
+// or as a list of IPs (["1.2.3.4", "2001:db8::4"]).
+type NameserverIPs []string
+
+func (n *NameserverIPs) UnmarshalJSON(data []byte) error {
+	var single string
+	if err := json.Unmarshal(data, &single); err == nil {
+		*n = NameserverIPs{single}
+		return nil
+	}
+	var list []string
+	err := json.Unmarshal(data, &list)
+	*n = list
+	return err
 }
 
 func NewConfigFromPath(path string) (c *Config, err error) {

@@ -3,9 +3,10 @@ A stupid simple DNS server which answers as authoritative nameserver for each zo
 > Attention: Should only be used for testing and mocking. Don't allow access from public to this server!
 
 ## How it works
-This server will respond to A, NS and SOA record requests with a static response regardless of the zone name.  
-Returned nameservers can be configured via json config file.
-At the moment an IP can be specified, but it does not have an effect. (Maybe using this later for glue records)
+This server will respond to A, AAAA, NS and SOA record requests with a static response regardless of the zone name.  
+A requests are answered with ``127.0.0.1``, AAAA requests with ``::1``.  
+Returned nameservers can be configured via json config file. Each nameserver gets a single IP (e.g. ``"1.2.3.4"``)
+or a list of IPv4 and/or IPv6 addresses (e.g. ``["1.2.3.4", "2001:db8::4"]``), which are returned as A/AAAA glue records.
 
 ## Why would I do this
 Mocking zone availability in a test environment where a zone should be "reachable".  

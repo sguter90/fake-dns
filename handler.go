@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
-	"github.com/miekg/dns"
 	"maps"
 	"net"
 	"slices"
 	"strconv"
 	"time"
+
+	"github.com/miekg/dns"
 )
 
 type Handler struct {
@@ -25,30 +26,32 @@ func (h *Handler) ServeDNS(w dns.ResponseWriter, r *dns.Msg) {
 	msg := dns.Msg{}
 	msg.SetReply(r)
 	switch r.Question[0].Qtype {
-	case dns.TypeA:
+	case dns.TypeA, dns.TypeAAAA:
 		msg.Authoritative = true
 		domain := msg.Question[0].Name
-		ip := "127.0.0.1"
-		if nsIp, ok := h.c.Nameservers[domain]; ok {
-			ip = nsIp
+		ips := []string{"127.0.0.1", "::1"}
+		if nsIps, ok := h.c.Nameservers[domain]; ok {
+			ips = nsIps
 		}
-		msg.Answer = append(msg.Answer, &dns.A{
-			Hdr: dns.RR_Header{Name: domain, Rrtype: dns.TypeA, Class: dns.ClassINET, Ttl: 3600},
-			A:   net.ParseIP(ip),
-		})
+		for _, ip := range ips {
+			record := addressRecord(domain, ip)
+			// only return A records for A requests and AAAA records for AAAA requests
+			if record.Header().Rrtype == r.Question[0].Qtype {
+				msg.Answer = append(msg.Answer, record)
+			}
+		}
 	case dns.TypeNS:
 		msg.Authoritative = true
 		domain := msg.Question[0].Name
-		for nsName, nsIp := range h.c.Nameservers {
+		for nsName, nsIps := range h.c.Nameservers {
 			msg.Answer = append(msg.Answer, &dns.NS{
 				Hdr: dns.RR_Header{Name: domain, Rrtype: dns.TypeNS, Class: dns.ClassINET, Ttl: 3600},
 				Ns:  nsName,
 			})
 
-			msg.Extra = append(msg.Extra, &dns.A{
-				Hdr: dns.RR_Header{Name: nsName, Rrtype: dns.TypeA, Class: dns.ClassINET, Ttl: 3600},
-				A:   net.ParseIP(nsIp),
-			})
+			for _, ip := range nsIps {
+				msg.Extra = append(msg.Extra, addressRecord(nsName, ip))
+			}
 		}
 	case dns.TypeSOA:
 		serial, _ := strconv.ParseUint(time.Now().UTC().Format("20060102"), 10, 64)
@@ -59,7 +62,7 @@ func (h *Handler) ServeDNS(w dns.ResponseWriter, r *dns.Msg) {
 		if names := slices.Sorted(maps.Keys(h.c.Nameservers)); len(names) > 0 {
 			nameserver = names[0]
 		}
-		nameIp := h.c.Nameservers[nameserver]
+		nameIps := h.c.Nameservers[nameserver]
 		msg.Answer = append(msg.Answer, &dns.SOA{
 			Hdr:     dns.RR_Header{Name: domain, Rrtype: dns.TypeSOA, Class: dns.ClassINET, Ttl: 3600},
 			Ns:      nameserver,
@@ -71,13 +74,27 @@ func (h *Handler) ServeDNS(w dns.ResponseWriter, r *dns.Msg) {
 			Minttl:  3600,
 		})
 
-		msg.Extra = append(msg.Extra, &dns.A{
-			Hdr: dns.RR_Header{Name: nameserver, Rrtype: dns.TypeA, Class: dns.ClassINET, Ttl: 3600},
-			A:   net.ParseIP(nameIp),
-		})
+		for _, ip := range nameIps {
+			msg.Extra = append(msg.Extra, addressRecord(nameserver, ip))
+		}
 	}
 	w.WriteMsg(&msg)
 	fmt.Println(time.Now().Format(time.DateTime) + " ")
 	//out, _ := json.MarshalIndent(msg, "", "    ")
 	//fmt.Println(string(out))
+}
+
+// addressRecord returns an A record for an IPv4 address and an AAAA record for an IPv6 address.
+func addressRecord(name string, ip string) dns.RR {
+	parsedIp := net.ParseIP(ip)
+	if parsedIp.To4() != nil {
+		return &dns.A{
+			Hdr: dns.RR_Header{Name: name, Rrtype: dns.TypeA, Class: dns.ClassINET, Ttl: 3600},
+			A:   parsedIp,
+		}
+	}
+	return &dns.AAAA{
+		Hdr:  dns.RR_Header{Name: name, Rrtype: dns.TypeAAAA, Class: dns.ClassINET, Ttl: 3600},
+		AAAA: parsedIp,
+	}
 }
