@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net"
 	"strconv"
 
 	"github.com/miekg/dns"
@@ -18,7 +19,7 @@ func main() {
 		log.Fatal(err.Error())
 	}
 
-	listenAddress := config.Ip + ":" + strconv.FormatUint(config.Port, 10)
+	listenAddress := net.JoinHostPort(config.Ip, strconv.FormatUint(config.Port, 10))
 	handler := &Handler{c: *config}
 
 	errCh := make(chan error, 2)
