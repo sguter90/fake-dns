@@ -20,6 +20,19 @@ make build # build for current OS
 make build_all # build for Linux, Mac OS and Windows
 ```
 
+## Release
+Every push and pull request to ``main`` is built via GitHub Actions (``.github/workflows/build.yml``).
+Pushing a version tag creates a GitHub release with the binaries and a ``checksums.txt`` attached:
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+The binaries of the latest release can always be downloaded via a stable URL:
+```bash
+curl -fLO https://github.com/sguter90/fake-dns/releases/latest/download/fake-dns_linux_amd64
+```
+
 ## Usage
 ```bash
 ./fake-dns -c ./path/to/config.json 
